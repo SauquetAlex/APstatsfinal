@@ -1,15 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
+
 for j in range(34, 128):
-    r = requests.get(f"https://nytcrosswordanswers.org/nyt-crossword-puzzles/page/{j}/")
+    r = requests.get(
+        f"https://nytcrosswordanswers.org/nyt-crossword-puzzles/page/{j}/")
     soup = BeautifulSoup(r.content, "html.parser")
 
     page = soup.find('main', id="main")
-    date = page.findAll('h2', class_="entry-title")
+    date = page.findAll('div', class_="entry-content clear")
     dateList = []
     for el in date:
-        dateList.append(el.find('a').text)
-
+        dateList.append(el.find('b'))
     words = page.findAll('div', class_="nywrap")
     ListOfWordLists = []
     ListOfPromptLists = []
@@ -23,13 +24,33 @@ for j in range(34, 128):
         ListOfWordLists.append(tempWords)
         ListOfPromptLists.append(tempPrompts)
 
-    for i in range(len(dateList)):
-        fileName = (dateList[i]).split()[3].replace("/","-")
-        f = open(f"{fileName}.txt", "w+")
-        f.write(dateList[i] + "\n")
-        for word in ListOfWordLists[i]:
-            f.write(word + "\n")
-        f.write("\n")
-        for prompt in ListOfPromptLists[i]:
-            f.write(prompt + "\n")
+    dateList = [date for date in dateList if date is not None]
+
+    if j == 34:
+        dateList = dateList[3:]
+        for i in range(len(dateList)):
+            fileName = (str(dateList[i])).replace(
+                "<b>", "").replace("</b>", "").replace(" ", "-")
+            f = open("Data/" + f"{fileName}.txt", "w+", encoding="utf-8")
+            f.write(str(dateList[i]) + "\n")
+            for word in ListOfWordLists[i]:
+                f.write(word + "\n")
+            f.write("\n")
+            for prompt in ListOfPromptLists[i]:
+                f.write((prompt) + "\n")
+    else:
+        if (len(dateList) != len(ListOfWordLists)):
+            print("ERROR at page " + str(j) + "!")
+            break
+        for i in range(len(dateList)):
+            fileName = (str(dateList[i])).replace(
+                "<b>", "").replace("</b>", "").replace(" ", "-").replace("/", "-")
+            f = open("Data/" + f"{fileName}.txt", "w+", encoding="utf-8")
+            f.write((str(dateList[i])).replace(
+                "<b>", "").replace("</b>", "").replace("/", " ") + "\n")
+            for word in ListOfWordLists[i]:
+                f.write(word + "\n")
+            f.write("\n")
+            for prompt in ListOfPromptLists[i]:
+                f.write((prompt) + "\n")
     print(j)
